@@ -4,7 +4,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 pub struct Vec3 {
     pub e: [f64; 3],
 }
-
+pub type Point3 = Vec3;
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vec3 { e: [x, y, z] }
@@ -42,6 +42,10 @@ impl Vec3 {
 
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
+    }
+
+    pub fn unit_vector(&self) -> Vec3 {
+        (*self) / self.length()
     }
 }
 
@@ -115,6 +119,13 @@ impl Mul<f64> for Vec3 {
         Vec3 {
             e: [self.e[0] * rhs, self.e[1] * rhs, self.e[2] * rhs],
         }
+    }
+}
+
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+    fn mul(self: f64, rhs: Vec3) -> Vec3 {
+        rhs * self
     }
 }
 

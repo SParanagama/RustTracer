@@ -1,6 +1,6 @@
 use crate::math;
 
-pub type Color = math::vec3::Vec3;
+pub type Color = math::Vec3;
 
 impl Color {
     pub fn write_color(&self, output: &mut String) {
