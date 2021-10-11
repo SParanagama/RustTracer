@@ -1,8 +1,173 @@
 use std::fs::File;
 use std::io::prelude::*;
 
-fn main() {
+mod math {
+    use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+    #[derive(Debug, Copy, Clone)]
+    pub struct Vec3 {
+        pub e: [f64; 3],
+    }
+
+    impl Vec3 {
+        pub fn new(x: f64, y: f64, z: f64) -> Self {
+            Vec3 { e: [x, y, z] }
+        }
+
+        pub fn x(&self) -> f64 {
+            self.e[0]
+        }
+
+        pub fn y(&self) -> f64 {
+            self.e[1]
+        }
+
+        pub fn z(&self) -> f64 {
+            self.e[2]
+        }
+
+        pub fn dot(&self, other: Self) -> f64 {
+            self.e[0] * other.e[0] + self.e[1] * other.e[1] + self.e[2] * other.e[2]
+        }
+
+        pub fn cross(&self, other: Self) -> Self {
+            Vec3 {
+                e: [
+                    self.e[1] * other.e[2] - self.e[2] * other.e[1],
+                    self.e[2] * other.e[0] - self.e[0] * other.e[2],
+                    self.e[0] * other.e[1] - self.e[1] * other.e[0],
+                ],
+            }
+        }
+
+        pub fn length_squared(&self) -> f64 {
+            self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2]
+        }
+
+        pub fn length(&self) -> f64 {
+            self.length_squared().sqrt()
+        }
+    }
+
+    impl Add for Vec3 {
+        type Output = Self;
+        fn add(self, rhs: Self) -> Self {
+            Vec3 {
+                e: [
+                    self.e[0] + rhs.e[0],
+                    self.e[1] + rhs.e[1],
+                    self.e[2] + rhs.e[2],
+                ],
+            }
+        }
+    }
+
+    impl AddAssign for Vec3 {
+        fn add_assign(&mut self, rhs: Self) {
+            self.e[0] = self.e[0] + rhs.e[0];
+            self.e[1] = self.e[1] + rhs.e[1];
+            self.e[2] = self.e[2] + rhs.e[2];
+        }
+    }
+
+    impl Sub for Vec3 {
+        type Output = Self;
+        fn sub(self, rhs: Self) -> Self {
+            Vec3 {
+                e: [
+                    self.e[0] - rhs.e[0],
+                    self.e[1] - rhs.e[1],
+                    self.e[2] - rhs.e[2],
+                ],
+            }
+        }
+    }
+
+    impl SubAssign for Vec3 {
+        fn sub_assign(&mut self, rhs: Self) {
+            self.e[0] = self.e[0] - rhs.e[0];
+            self.e[1] = self.e[1] - rhs.e[1];
+            self.e[2] = self.e[2] - rhs.e[2];
+        }
+    }
+
+    impl Neg for Vec3 {
+        type Output = Self;
+        fn neg(self) -> Self {
+            Vec3 {
+                e: [-self.e[0], -self.e[1], -self.e[2]],
+            }
+        }
+    }
+
+    impl Mul for Vec3 {
+        type Output = Self;
+        fn mul(self, rhs: Self) -> Self {
+            Vec3 {
+                e: [
+                    self.e[0] * rhs.e[0],
+                    self.e[1] * rhs.e[1],
+                    self.e[2] * rhs.e[2],
+                ],
+            }
+        }
+    }
+
+    impl Mul<f64> for Vec3 {
+        type Output = Self;
+        fn mul(self, rhs: f64) -> Self {
+            Vec3 {
+                e: [self.e[0] * rhs, self.e[1] * rhs, self.e[2] * rhs],
+            }
+        }
+    }
+
+    impl MulAssign<f64> for Vec3 {
+        fn mul_assign(&mut self, rhs: f64) {
+            self.e[0] = self.e[0] * rhs;
+            self.e[1] = self.e[1] * rhs;
+            self.e[2] = self.e[2] * rhs;
+        }
+    }
+
+    impl Div<f64> for Vec3 {
+        type Output = Self;
+        fn div(self, rhs: f64) -> Self {
+            let div = 1 as f64 / rhs;
+            Vec3 {
+                e: [self.e[0] * div, self.e[1] * div, self.e[2] * div],
+            }
+        }
+    }
+
+    impl DivAssign<f64> for Vec3 {
+        fn div_assign(&mut self, rhs: f64) {
+            let div = 1 as f64 / rhs;
+            self.e[0] = self.e[0] * div;
+            self.e[1] = self.e[1] * div;
+            self.e[2] = self.e[2] * div;
+        }
+    }
+}
+
+mod utils {
+    pub mod color {
+        use crate::math::Vec3;
+
+        pub type Color = Vec3;
+
+        impl Color {
+            pub fn write_color(&self, output: &mut String) {
+                let ir = (255.999 * self.x()) as i32;
+                let ig = (255.999 * self.y()) as i32;
+                let ib = (255.999 * self.z()) as i32;
+                output.push_str(&format!("{} {} {}\n", ir, ig, ib));
+            }
+        }
+    }
+}
+
+fn main() {
     let image_width: i32 = 256;
     let image_height: i32 = 256;
 
@@ -11,23 +176,19 @@ fn main() {
     image_content.push_str(&format!("{} {}\n255\n", image_width, image_height));
 
     for j in (0..image_height).rev() {
-        println!("Scanlines remaining: {}\n", {j});
+        println!("Scanlines remaining: {}\n", { j });
         for i in 0..image_width {
-            let r = i as f64 / (image_width-1) as f64;
-            let g = j as f64 / (image_height-1) as f64;
+            let r = i as f64 / (image_width - 1) as f64;
+            let g = j as f64 / (image_height - 1) as f64;
             let b = 0.25;
 
-            let ir = (255.999 * r) as i32;
-            let ig = (255.999 * g) as i32;
-            let ib = (255.999 * b) as i32;
-
-            image_content.push_str(&format!("{} {} {}\n", ir, ig, ib));
+            let color = utils::color::Color::new(r, g, b);
+            color.write_color(&mut image_content);
         }
     }
 
-
-    let result = File::create("image.ppm")
-    .and_then(|mut file| file.write_all(image_content.as_bytes()));
+    let result =
+        File::create("image.ppm").and_then(|mut file| file.write_all(image_content.as_bytes()));
 
     if result.is_ok() {
         println!("File wrote successfully!");
